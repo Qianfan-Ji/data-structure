@@ -1,0 +1,128 @@
+//利用栈的特性完成数制转换（十进制数转成二进制数、八进制数和十六进制数）；
+// 要求：
+//1）函数统一声名为 char *conversion ( int num, int system=2 );
+//2）参数num为待转换的10进制数，system为需转换的进制，可取2，8，16
+// 3）转换结果，以字符串形式输出，例如2进制结果为1101B，则返回十进制数1101
+#include<bits/stdc++.h>
+#define STACK_INIT_SIZE 100
+#define STACKINCREMENT 10
+
+using namespace std;
+typedef int ElemType;
+typedef struct{
+ 	ElemType *base=NULL;
+ 	ElemType *top=NULL;
+ 	int stacksize=0;	//栈剩余的容量，以元素为单位
+} SqStack;
+
+void InitStack(SqStack &s);									//初始化一个空栈
+void DestroyStack(SqStack &s);								//销毁栈
+void ClearStack(SqStack &s);								//清空栈
+bool StackEmpty(SqStack s);									//判断栈是否为空栈，是返回1，否返回0
+int StackLength(SqStack s);									//返回栈元素的个数
+bool GetTop(SqStack &s,ElemType &e);						//返回栈顶元素，若栈空返回0，否则返回1
+void Push(SqStack &s,ElemType e);							//压栈
+bool Pop(SqStack &s,ElemType &e);							//出栈
+void StackTraverse(SqStack &s,void (*visit)(ElemType*));	//从栈底到顶依次对每个元素使用visit函数
+char* conversion(int num,int system=2);
+
+SqStack s;
+char result[100];
+int main(){
+	int n,m;
+	cout<<"请输入需要转化的十进制数： ";
+	cin>>n;
+	cout<<endl<<"请输入转化数的进制： ";
+	cin>>m;
+	
+	cout<<conversion(n,m)<<endl;
+	DestroyStack(s);
+	system("pause");
+
+	return 0;
+}
+
+char* conversion(int num,int system){
+	int e;
+	InitStack(s);
+	while(num){
+		Push(s,num%system);
+		num/=system;
+	}
+	
+	char* r=result;
+	while(!StackEmpty(s)){
+		Pop(s,e);
+		if(e==10)*r++='A';
+		else if(e==11)*r++='B';
+		else if(e==12)*r++='C';
+		else if(e==13)*r++='D';
+		else if(e==14)*r++='E';
+		else if(e==15)*r++='F';
+		else {
+		*r++=e+'0';
+		}
+	}
+	*r='\0';
+	return result;
+}
+
+void InitStack(SqStack &s){
+	s.base=(ElemType*)malloc(STACK_INIT_SIZE*sizeof(ElemType));
+	if(!s.base)exit(0);
+	s.top=s.base;
+	s.stacksize=STACK_INIT_SIZE;
+}
+
+void DestroyStack(SqStack &s){
+	free(s.base);
+	s.base=s.top=NULL;
+	s.stacksize=0;
+}
+
+void ClearStack(SqStack &s){
+	s.stacksize+=StackLength(s);
+	s.top=s.base;
+}
+
+bool StackEmpty(SqStack s){
+	return(s.base==s.top);
+}
+
+int StackLength(SqStack s){
+	return(s.top-s.base);
+}
+
+bool GetTop(SqStack &s,ElemType &e){
+	if(s.top!=s.base){
+		e=*(s.top-1);
+		return 1;
+	}
+	return 0;
+}
+
+void Push(SqStack &s,ElemType e){
+	if(!s.stacksize){
+		int n=s.top-s.base;
+		s.base=(ElemType*)realloc(s.base,(STACKINCREMENT+StackLength(s))*sizeof(ElemType));
+		if(!s.base)exit(1);
+		s.top=s.base+n;
+		s.stacksize=STACKINCREMENT;
+	}
+	*s.top++=e;
+	--s.stacksize;
+}
+
+bool Pop(SqStack &s,ElemType &e){
+	if(s.base==s.top)return 0;
+	e=*--s.top;
+	++s.stacksize;
+	return 1;
+}
+
+void StackTraverse(SqStack &s,void (*visit)(ElemType*)){
+	ElemType*  temp=s.base;
+	while(s.top!=temp++){
+		visit(temp-1);
+	}
+}
