@@ -1,0 +1,90 @@
+//利用顺序存储结构，定义实现一个可存储100个结点的完全二叉树；
+//实现一个二叉树的创建方法，按层的顺序输入结点,例如输入测试序列：1 2 3 4 -1 5 6 -1 -1 -1 -1 7 8 -1 9 (-1表示该结点不存在)
+//实现提取左孩子的方法 leftchild(tree,n) 和 rightchile(tree,n)；
+//实现树的打印输出算法，按层遍历结点并打印对应的数值，用空格占位；
+//打印输出全部叶子结点；
+//对文件in.txt的操作（读取数据）在create_bitree函数中
+#include<bits/stdc++.h>
+#define MAX_TREE_SIZE  100   // 0号单元存储实际最大下标，1号结点存储根结点
+#define IN_REDIRECTION
+using namespace std;
+
+typedef int  SqBiTree[MAX_TREE_SIZE];
+SqBiTree  bitree;
+
+ostream& blank(ostream& o){
+	return o<<" ";
+}
+
+void print_blank(int blank_len){
+	while(blank_len-->0)
+	cout<<blank;
+}
+
+int create_bitree(SqBiTree tree){
+#ifdef IN_REDIRECTION
+	ifstream fin("C:\\Users\\86139\\Desktop\\in.txt",ios::in|ios::binary);
+	if(!fin){cout<<"in.txt failed open! please check out."<<endl;	exit(0);}
+#endif
+	int i=1;
+	fin>>tree[0];
+	for(;i<=tree[0];++i)
+		fin>>tree[i];
+	for(;i<=MAX_TREE_SIZE;++i)
+		tree[i]=-1;
+}
+
+int leftchild(SqBiTree tree,int n){
+	return tree[2*n];
+}
+
+int rightchild(SqBiTree tree,int n){
+	return tree[2*n+1];
+}
+
+void printtree(SqBiTree tree){
+	int k=log10(tree[0])/log10(2)+1;
+	int blank_len=0,temp=k;
+	
+	while(--temp)	blank_len=blank_len*2+1;
+	
+	for(int i=1,j=1;i<=k;i++){
+		cout<<"\t\t";
+		for(int t=1;t<=pow(2,i-1);++j,++t){
+			print_blank(blank_len);
+			if(tree[j]==-1) cout<<blank;
+			else cout<<tree[j];
+			print_blank(blank_len);
+			cout<<blank;
+		}
+		cout<<endl<<endl;
+		blank_len=(blank_len-1)/2;
+	}
+}
+
+void print_leaves(SqBiTree tree){
+	cout<<"叶子节点为： ";
+	int k=log10(tree[0])/log10(2),i=0,j=1;
+	while(k--)	i+=pow(2,k);
+	for(;j<=i;++j)
+		if(tree[j]==-1)	continue;
+		else if(tree[2*j]==-1&&tree[2*j+1]==-1)
+				cout<<tree[j]<<blank;
+	for(int t=j;t<=(i+1)*2-1;++t)
+		if(tree[t]!=-1) cout<<tree[t]<<blank;
+	cout<<endl;
+}
+
+int main(){
+	
+	create_bitree(bitree);
+	
+	printtree(bitree);
+	
+	print_leaves(bitree);
+	
+	if(leftchild(bitree,7)!=-1)cout<<"7的左孩子为："<<leftchild(bitree,7)<<endl;
+	if(rightchild(bitree,7)!=-1)cout<<"7的右孩子为："<<rightchild(bitree,7)<<endl;
+	
+	return 0;
+}
