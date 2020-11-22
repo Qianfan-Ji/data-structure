@@ -1,0 +1,113 @@
+#include<bits/stdc++.h>
+#define OK 1
+#define ERROR 0
+
+typedef int Status;
+typedef char ElemType;
+typedef struct BiTNode{ 
+    ElemType data='#';
+    struct BiTNode  *leftchild=NULL, *rightchild=NULL;
+} BiTNode,* BiTree;
+
+Status CreateTree_Preorder(BiTree &T){
+	ElemType ch;
+	scanf("%c",&ch);
+	if (ch=='#') T = NULL;
+	else {
+		if (!(T = (BiTNode *)malloc(sizeof(BiTNode)))) return ERROR;
+		T->data = ch;
+		CreateTree_Preorder(T->leftchild);
+		CreateTree_Preorder(T->rightchild);
+	}
+	return OK;
+}
+
+Status PrintElement( ElemType e ) {
+    if(printf("%c ", e )==2)	return OK;
+    return ERROR;
+}
+
+Status PreOrderTraverse(BiTree T, Status (*Visit)(ElemType)){
+	if(T){
+		Visit(T->data);
+		PreOrderTraverse(T->leftchild, Visit);
+		PreOrderTraverse(T->rightchild, Visit);
+		return OK;
+	}
+	return OK;
+}
+
+Status InOrderTraverse_recur(BiTree T, Status (*Visit)(ElemType)) {
+	if(T){
+		if(InOrderTraverse_recur(T->leftchild, Visit))
+	  		if(Visit(T->data))
+	    		if(InOrderTraverse_recur(T->rightchild, Visit)) return OK;
+		return ERROR;
+	}
+	return OK;
+}
+
+Status PostOrder_Destroy(BiTree &T){
+	if(T){
+		PostOrder_Destroy(T->leftchild);
+		PostOrder_Destroy(T->rightchild);
+	  	free(T);
+	  	T=NULL;
+		return OK;
+	}
+	return OK;
+}
+
+Status InOrderTraverse2(BiTree T, Status (*Visit)(ElemType)) {
+	std::stack<BiTree> S;
+	BiTree temp;
+	S.push(T);
+	while (!S.empty()){
+		while (S.top()) S.push(S.top()->leftchild);
+		S.pop();
+		if(!S.empty()){
+			temp=S.top();
+			Visit(temp->data);
+			S.pop();
+			S.push(temp->rightchild);
+		}
+	}
+	return OK;
+}
+
+Status InOrderTraverse3(BiTree T, Status (*Visit)(ElemType)) {
+	std::stack<BiTree> S;
+	BiTree p = T;
+	while (p || !S.empty()) {
+		if (p) { S.push(p);  p = p->leftchild; }
+		else {
+		  p=S.top();
+		   S.pop();
+		  Visit(p->data);
+		  p = p->rightchild;
+		}
+	}
+	return OK;
+} 
+
+int main(){
+	//测试用输序列: 12#4##3#56###，注意，没有空格 
+	BiTree Tree;
+	printf("请输入结点序列：\n");
+	CreateTree_Preorder(Tree);
+	//前序遍历
+	printf("前序遍历：\n");
+	PreOrderTraverse(Tree, PrintElement);
+	//递归中序遍历
+	printf("\n中序遍历：\n");
+	InOrderTraverse_recur(Tree, PrintElement);
+	//非递归中序遍历
+	printf("\n非递归中序遍历：\n");
+	InOrderTraverse2(Tree, PrintElement);
+	printf("\n");
+	InOrderTraverse3(Tree, PrintElement);
+	//销毁树
+	PostOrder_Destroy(Tree);
+	
+	return 0;
+}
