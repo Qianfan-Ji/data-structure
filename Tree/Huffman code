@@ -1,0 +1,64 @@
+#include<bits/stdc++.h>
+using namespace std;
+typedef struct{
+	char c;     //字符
+	double w;   //权重
+    int parent,lchild,rchild;
+}Hfnode;
+Hfnode hfnode[100];
+int n,deep=-1,flag1,flag2;		//deep是树的深度，用在show函数中
+char temp[100],code[1000];//save[100][100];	//save用于存储字符的赫夫曼码
+void code_and_decode(){
+	ifstream fin("C:\\Users\\86139\\Desktop\\in.txt",ios::in|ios::binary);
+	if(!fin){cout<<"in.txt failed open! please check out."<<endl;	exit(0);}//
+	double  min1=999,min2=999;
+	fin>>n;		//scanf("%d",&n);	getchar();
+	for(int i=0;i<2*n;++i){
+		hfnode[i].parent=hfnode[i].lchild=hfnode[i].rchild=-1;
+		if(i<n)	fin>>hfnode[i].c;	//scanf("%c",&hfnode[i].c);
+		else	fin>>hfnode[i-n].w;	//scanf("%d",&hfnode[i-n].w);
+	}
+	for(int t=0;t<n-1;++t){		// n-1次操作
+		for(int i=0;i<n+t;++i){		//遍历目前所有树
+			if(hfnode[i].parent==-1&&min2>hfnode[i].w){
+				if(min1>hfnode[i].w){ min2=min1; min1=hfnode[i].w;flag2=flag1; flag1=i; }
+				else {	min2=hfnode[i].w; flag2=i; }}
+			}		//寻找2个最小树并记录
+		hfnode[flag1].parent=hfnode[flag2].parent=n+t;
+		hfnode[n+t].w=hfnode[flag1].w+hfnode[flag2].w;
+		hfnode[n+t].lchild=flag1;
+		hfnode[n+t].rchild=flag2;
+		min1=min2=999;		//合并树并加入
+	}
+  	//for(int i=0;i<2*n-1;++i)printf("%.2lf\n",hfnode[i].w);
+  	fin>>code;	//printf("请输入需要译码的字串code：");scanf("%s",code);
+  	printf("对code ( %s ) 的译码为：\n",code);
+  	int len=strlen(code),now=2*n-2;
+	for(int i=0;i<=len;++i){
+		if(now<n){	printf("%c",hfnode[now].c);	now=2*n-2;	}
+		if(code[i]=='0')	now=hfnode[now].lchild;
+		else 				now=hfnode[now].rchild;
+	}
+  	printf("\n\n");
+}
+
+void show(int i){//递归，展示字符的编码，i为根节点位置
+	deep++;
+	if(i<n){
+		temp[deep]='\0';
+		//strcpy(save[i],temp);
+		printf("%c(%.2lf) 赫夫曼编码为：%s\n\n",hfnode[i].c,hfnode[i].w,temp);
+	}
+	else{
+		temp[deep]='0';show(hfnode[i].lchild);
+		temp[deep]='1';show(hfnode[i].rchild);
+	}
+	deep--;
+}
+
+int main(){
+	code_and_decode();
+	show(2*n-2);
+	return 0;
+	system("pause");
+}
