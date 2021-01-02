@@ -1,0 +1,187 @@
+#include<iostream>
+#include<cstring>
+#define VertexType int
+#define status1 void
+#define maxnum 100
+using namespace std;
+
+typedef struct biao{
+	int location;//location of the other vertex
+	struct biao* next;//next edge
+	double weight;
+}Bnode;
+typedef struct tou{
+	VertexType name;
+	Bnode* next;//it's edge
+}Tnode;
+typedef struct graph{
+	Tnode* Tparray[maxnum];//the array to save Tnodes' pointer
+	int n,e;//n:vertex_num e:edge_num
+}Graph;
+
+status1 Initial(Graph&);
+int Location(const Graph&,VertexType);//the map from vertex's name to it's location
+status1 Print(const Graph&);
+status1 Bianli_S(const Graph&);//深度遍历入口函数
+status1 B_S(const Graph&,int,bool*);//深度遍历
+status1 Bianli_G(const Graph&);//广度遍历入口函数
+status1 B_G(const Graph&,int*,int*,bool*);//广度遍历
+status1 visit(const Graph&,int);
+
+status1 Initial(Graph& G){
+	cout<<"请输入顶点数和边数："<<endl;
+	cin>>G.n>>G.e;
+	cout<<"请依次输入顶点名字："<<endl;
+	int n_temp=G.n;
+	while(n_temp--){//初始化顶点指针数组
+		Tnode* p=new Tnode;
+		cin>>p->name;
+		p->next=NULL;
+		G.Tparray[G.n-n_temp-1]=p;
+	}
+	cout<<"请依次输入边(输入其所连两个顶点的名字)"<<endl;
+	int e_temp=G.e;
+	VertexType ver1,ver2;
+	while(e_temp--){
+		cout<<"第"<<G.e-e_temp<<"个边:"<<endl;
+		cin>>ver1>>ver2;
+		int loca1=Location(G,ver1),loca2=Location(G,ver2);
+		Bnode* p1=new Bnode;//ver1顶点的表结点
+		p1->location=loca2;
+		p1->next=NULL;
+		p1->weight=ver1+ver2;//边的权值为他连接的两个节点上数字的和
+		if(G.Tparray[loca1]->next==NULL)G.Tparray[loca1]->next=p1;//头结点所连的第一个表结点
+		else{//添加到最后一个表结点后面
+			Bnode* p_temp=G.Tparray[loca1]->next;
+			while(p_temp->next!=NULL)
+				p_temp=p_temp->next;
+			p_temp->next=p1;
+		}
+		
+		Bnode* p2=new Bnode;//ver2顶点的表结点
+		p2->location=loca1;
+		p2->next=NULL;
+		p2->weight=ver1+ver2;
+		if(G.Tparray[loca2]->next==NULL)G.Tparray[loca2]->next=p2;
+		else{
+			Bnode* p_temp=G.Tparray[loca2]->next;
+			while(p_temp->next!=NULL)
+				p_temp=p_temp->next;
+			p_temp->next=p2;
+		}
+		
+	}
+}
+
+int Location(const Graph& G,VertexType name){
+	int i;
+	for(i=0;i<G.n;++i)
+		if(name==G.Tparray[i]->name)
+			break;
+	return i;
+}
+
+status1 Print(const Graph& G){
+	for(int i=0;i<G.n;++i){
+		cout<<"与顶点"<<G.Tparray[i]->name<<"连接的顶点有：";
+		Bnode* p=G.Tparray[i]->next;
+		if(p==NULL)cout<<"无";
+		else
+			while(p!=NULL){
+				cout<<G.Tparray[p->location]->name<<" ";
+				p=p->next;
+			}
+		cout<<endl;
+	}
+}
+
+status1 Bianli_S(const Graph& G){
+	bool flag[G.n];//访问标记
+	memset(flag,0,sizeof(flag));
+	cout<<"深度优先遍历，请输入开始遍历顶点的名字："<<endl;
+	VertexType name;
+	cin>>name;
+	int loca=Location(G,name);
+	B_S(G,loca,flag);
+	for(int i=0;i<G.n;++i)//保证所有联通分量被遍历
+		if(flag[i]==false){
+			cout<<'/';//用 / 分隔不同的联通分量
+			B_S(G,i,flag);
+		}
+	cout<<endl;
+}
+
+status1 B_S(const Graph& G,int loca,bool* flag){
+	*(flag+loca)=true;
+	visit(G,loca);
+	Bnode* p=G.Tparray[loca]->next;
+	while(p!=NULL){
+		if(*(flag+p->location)==false)	B_S(G,p->location,flag);
+		p=p->next;
+	}
+}
+
+status1 Bianli_G(const Graph& G){
+	bool flag[G.n];//访问标记
+	int now[maxnum],next[maxnum];//now是本层要访问的顶点，next是下一层
+	memset(flag,0,sizeof(flag));
+	cout<<"广度优先遍历，请输入开始遍历顶点的名字："<<endl;
+	VertexType name;
+	cin>>name;
+	*now=Location(G,name);//第一层只有输入进去的顶点
+	*(now+1)=-1;//-1表示一层结束
+	flag[*now]=true;
+	B_G(G,now,next,flag);
+	for(int i=0;i<G.n;++i)//保证所有联通分量被遍历
+		if(flag[i]==false){
+			cout<<'/';//用 / 分隔不同的联通分量
+			*now=i;
+			*(now+1)=-1;
+			flag[*now]=true;
+			B_G(G,now,next,flag);
+		}
+	cout<<endl;
+}
+
+status1 B_G(const Graph& G,int* now,int* next,bool* flag){
+	while(*now!=-1){
+		int j=0;
+		for(int i=0;;++i){
+			if(now[i]!=-1){//没有遍历到本层结束
+				visit(G,now[i]);
+				Bnode* p=G.Tparray[now[i]]->next;
+				while(p!=NULL){//把本层顶点所连的未被访问顶点存入下一层next
+					if(flag[p->location]==false){
+					next[j++]=p->location;
+					*(flag+p->location)=true;//访问位置真
+					}
+					p=p->next;
+				}
+			}
+			else{//遍历到本层结束
+				next[j]=-1;//
+				int* temp=next;//交换now和next,本层的next成为下一层的now
+				next=now;
+				now=temp;
+				break;//进入下一层
+			}
+		}
+	}
+}
+
+status1 visit(const Graph& G,int loca){
+	cout<<G.Tparray[loca]->name<<" ";
+}
+
+int main(){
+	freopen("C:\\Users\\86139\\Desktop\\in.txt","r",stdin);
+	int time=2;//time是测试次数
+	while(time--){
+	Graph G;
+	Initial(G);
+	//Print(G);
+	Bianli_S(G);
+	Bianli_G(G);
+	}
+	return 0;
+}
